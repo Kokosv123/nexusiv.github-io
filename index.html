@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --card-bg: #1a1d29;
+            --accent-color: #00d2ff;
+            --text-main: #ffffff;
+            --text-secondary: #94a3b8;
+            --btn-grad: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .header {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            background: var(--btn-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2d3142;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--accent-color);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .price {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .buy-btn {
+            background: var(--btn-grad);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: #ff3e3e;
+            color: white;
+            padding: 5px 35px;
+            font-size: 10px;
+            transform: rotate(45deg);
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 12px;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>NEXUS STORE</h1>
+        <div style="color: var(--text-secondary); font-size: 12px;">Выбор тарифного плана</div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>BASE</h2>
+            <p>Доступ ко всем базовым функциям на 30 дней. Идеально для старта.</p>
+            <div class="price-row">
+                <div class="price">3.00 USDT</div>
+                <button class="buy-btn" onclick="order('base', 3)">ВЫБРАТЬ</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="badge">POPULAR</div>
+            <h2>DELUXE</h2>
+            <p>Приоритетная поддержка и расширенный функционал на 90 дней.</p>
+            <div class="price-row">
+                <div class="price">5.00 USDT</div>
+                <button class="buy-btn" onclick="order('deluxe', 5)">ВЫБРАТЬ</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>ULTRA</h2>
+            <p>Полный безлимит на 1 год. Максимальная выгода и мощь.</p>
+            <div class="price-row">
+                <div class="price">15.00 USDT</div>
+                <button class="buy-btn" onclick="order('ultra', 15)">ВЫБРАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>Powered by Nexus Team & Crystal Pay</footer>
+
+    <script>
+        // Инициализация Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+        tg.headerColor = '#0f111a'; // Цвет шапки
+
+        function order(plan, price) {
+            // Формируем данные для отправки боту: "buy_план_цена"
+            let data = "buy_" + plan + "_" + price;
+            
+            // Отправляем данные боту (метод sendData закрывает WebApp автоматически)
+            tg.sendData(data);
+        }
+    </script>
+</body>
+</html>
