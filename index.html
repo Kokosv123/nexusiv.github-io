@@ -1,106 +1,217 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nexus Store</title>
-    
-    <!-- ОБРАТИТЕ ВНИМАНИЕ: добавлено ?v=5 для обновления дизайна -->
-    <link rel="stylesheet" href="style.css?v=5">
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === STYLES === */
+        :root { --bg: #050505; --card-bg: rgba(255, 255, 255, 0.05); --text: #fff; --muted: #888; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .container { max-width: 450px; margin: 0 auto; padding: 20px 20px 100px 20px; }
+        
+        /* Debug Console */
+        #debug-console {
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: rgba(0,0,0,0.9); color: #0f0; 
+            font-family: monospace; font-size: 10px; 
+            padding: 5px; height: 60px; overflow-y: scroll; 
+            z-index: 9999; border-top: 1px solid #333;
+            display: none; /* Включится скриптом */
+        }
+
+        /* Header */
+        header { text-align: center; margin-bottom: 20px; }
+        .logo { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: 2px; }
+        .subtitle { color: var(--muted); font-size: 13px; margin-top: 5px; }
+
+        /* Settings */
+        .settings-bar { display: flex; justify-content: center; margin-bottom: 20px; gap: 10px; }
+        .currency-scroll { background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; display: flex; gap: 5px; }
+        .curr-btn { background: none; border: none; color: var(--muted); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px; transition: 0.2s; }
+        .curr-btn.active { background: rgba(255,255,255,0.2); color: white; }
+
+        /* Cards */
+        .cards-container { display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; position: relative; transition: 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .card.selected { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+        .base { border-top: 2px solid #00d2ff; }
+        .deluxe { border-top: 2px solid #bc13fe; }
+        .ultra { border-top: 2px solid #ffaa00; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .card-header h3 { margin: 0; font-family: 'Rajdhani', sans-serif; font-size: 24px; }
+        .price-box { font-size: 28px; font-weight: 700; margin-bottom: 15px; font-family: 'Rajdhani', sans-serif; }
+        .features { list-style: none; padding: 0; color: #ccc; font-size: 13px; margin-bottom: 15px; }
+        .features li { margin-bottom: 5px; }
+
+        .buy-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; font-weight: 700; pointer-events: none; }
+        .card.selected .buy-btn { background: white; color: black; }
+    </style>
 </head>
 <body>
-    
-    <div class="bg-glow top"></div>
-    <div class="bg-glow bottom"></div>
+
+    <!-- Консоль для отладки прямо на экране телефона -->
+    <div id="debug-console">Waiting for logs...<br></div>
 
     <div class="container">
         <header>
-            <div class="logo">
-                <span class="logo-icon">💠</span>
-                <span class="logo-text">NEXUS STORE</span>
-            </div>
-            <p class="subtitle" data-key="subtitle">Digital Licenses & Keys</p>
+            <div class="logo">💠 NEXUS</div>
+            <p class="subtitle">Digital Store</p>
         </header>
 
-        <!-- Настройки (Язык + Валюта) -->
         <div class="settings-bar">
-            <div class="lang-switch">
-                <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
-                <button class="lang-btn" onclick="setLanguage('ru')">RU</button>
-                <button class="lang-btn" onclick="setLanguage('ua')">UA</button>
-            </div>
             <div class="currency-scroll">
                 <button class="curr-btn active" onclick="setCurrency('USD')">$</button>
-                <button class="curr-btn" onclick="setCurrency('USDT')">₮</button>
-                <button class="curr-btn" onclick="setCurrency('EUR')">€</button>
-                <button class="curr-btn" onclick="setCurrency('UAH')">₴</button>
                 <button class="curr-btn" onclick="setCurrency('RUB')">₽</button>
+                <button class="curr-btn" onclick="setCurrency('UAH')">₴</button>
+                <button class="curr-btn" onclick="setCurrency('EUR')">€</button>
             </div>
         </div>
 
         <div class="cards-container">
             <!-- BASE -->
-            <div class="card base" onclick="handleCardClick('BASE', 3.00)">
+            <div class="card base" id="card-base" onclick="selectItem('BASE', 3.00)">
                 <div class="card-header">
                     <h3>BASE</h3>
-                    <span class="duration" data-key="month1">1 Month</span>
+                    <span>1 Month</span>
                 </div>
                 <div class="price-box">
-                    <span class="currency-symbol">$</span>
-                    <span class="price-val" data-base="3">3.00</span>
+                    <span class="symbol">$</span><span class="val" data-base="3">3.00</span>
                 </div>
-                <ul class="features">
-                    <li data-key="feat_access">✅ Access to soft</li>
-                    <li data-key="feat_support">✅ Basic support</li>
-                    <li data-key="feat_no_cfg">❌ Private Configs</li>
-                </ul>
-                <button class="buy-btn" data-key="btn_select">SELECT</button>
+                <ul class="features"><li>✅ Access</li><li>❌ Support</li></ul>
+                <button class="buy-btn">SELECT</button>
             </div>
 
             <!-- DELUXE -->
-            <div class="card deluxe popular" onclick="handleCardClick('DELUXE', 5.00)">
-                <div class="badge" data-key="pop_badge">POPULAR</div>
+            <div class="card deluxe" id="card-deluxe" onclick="selectItem('DELUXE', 5.00)">
                 <div class="card-header">
                     <h3>DELUXE</h3>
-                    <span class="duration" data-key="month3">3 Months</span>
+                    <span>3 Months</span>
                 </div>
                 <div class="price-box">
-                    <span class="currency-symbol">$</span>
-                    <span class="price-val" data-base="5">5.00</span>
+                    <span class="symbol">$</span><span class="val" data-base="5">5.00</span>
                 </div>
-                <ul class="features">
-                    <li data-key="feat_all_base">✅ All Base features</li>
-                    <li data-key="feat_prio">✅ Queue Priority</li>
-                    <li data-key="feat_beta">✅ Beta Access</li>
-                </ul>
-                <button class="buy-btn" data-key="btn_select">SELECT</button>
+                <ul class="features"><li>✅ Access</li><li>✅ Priority</li></ul>
+                <button class="buy-btn">SELECT</button>
             </div>
 
             <!-- ULTRA -->
-            <div class="card ultra" onclick="handleCardClick('ULTRA', 15.00)">
-                <div class="badge" data-key="best_badge">BEST VALUE</div>
+            <div class="card ultra" id="card-ultra" onclick="selectItem('ULTRA', 15.00)">
                 <div class="card-header">
                     <h3>ULTRA</h3>
-                    <span class="duration" data-key="year1">1 Year / Forever</span>
+                    <span>Forever</span>
                 </div>
                 <div class="price-box">
-                    <span class="currency-symbol">$</span>
-                    <span class="price-val" data-base="15">15.00</span>
+                    <span class="symbol">$</span><span class="val" data-base="15">15.00</span>
                 </div>
-                <ul class="features">
-                    <li data-key="feat_full">👑 Full Access</li>
-                    <li data-key="feat_manager">👑 Personal Manager</li>
-                    <li data-key="feat_dlc">👑 DLC Early Access</li>
-                </ul>
-                <button class="buy-btn" data-key="btn_select">SELECT</button>
+                <ul class="features"><li>👑 Full Access</li><li>👑 Manager</li></ul>
+                <button class="buy-btn">SELECT</button>
             </div>
         </div>
     </div>
 
-    <!-- ОБРАТИТЕ ВНИМАНИЕ: добавлено ?v=5 для обновления скрипта -->
-    <script src="script.js?v=5"></script>
+    <script>
+        /* === JAVASCRIPT === */
+        const consoleDiv = document.getElementById('debug-console');
+        function log(msg) {
+            consoleDiv.style.display = 'block';
+            consoleDiv.innerHTML = `> ${msg}<br>` + consoleDiv.innerHTML;
+        }
+
+        log("Script loaded. Initializing TG...");
+
+        let tg;
+        try {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            log("TG WebApp OK. Version: " + tg.version);
+        } catch (e) {
+            log("CRITICAL: Telegram WebApp not found!");
+            alert("Telegram SDK not loaded");
+        }
+
+        const rates = { USD: 1, RUB: 92.5, UAH: 41.5, EUR: 0.92 };
+        const symbols = { USD: '$', RUB: '₽', UAH: '₴', EUR: '€' };
+        
+        let selectedPlan = null;
+        let selectedPrice = 0;
+        let currentCurrency = 'USD';
+
+        // Функция выбора валюты
+        window.setCurrency = function(curr) {
+            try {
+                currentCurrency = curr;
+                // Кнопки
+                document.querySelectorAll('.curr-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if(b.textContent.includes(symbols[curr])) b.classList.add('active');
+                });
+                // Цены
+                document.querySelectorAll('.val').forEach(el => {
+                    const base = parseFloat(el.getAttribute('data-base'));
+                    const val = (base * rates[curr]).toFixed(curr === 'RUB' || curr === 'UAH' ? 0 : 2);
+                    el.textContent = val;
+                });
+                document.querySelectorAll('.symbol').forEach(s => s.textContent = symbols[curr]);
+                log("Currency set to " + curr);
+            } catch(e) { log("Error setCurrency: " + e.message); }
+        }
+
+        // Функция клика по карте
+        window.selectItem = function(plan, price) {
+            try {
+                log("Clicked: " + plan);
+
+                // Если уже выбран - отправляем
+                if (selectedPlan === plan) {
+                    log("Sending data: buy_" + plan + "_" + price);
+                    tg.sendData(`buy_${plan}_${price}`);
+                    setTimeout(() => tg.close(), 100); // Принудительное закрытие
+                    return;
+                }
+
+                // Выбор
+                selectedPlan = plan;
+                selectedPrice = price;
+
+                // Сброс классов
+                document.querySelectorAll('.card').forEach(c => {
+                    c.classList.remove('selected');
+                    c.querySelector('.buy-btn').textContent = "SELECT";
+                });
+
+                // Подсветка
+                const card = document.getElementById('card-' + plan.toLowerCase());
+                if(card) {
+                    card.classList.add('selected');
+                    card.querySelector('.buy-btn').textContent = "BUY NOW";
+                }
+
+                // Синяя кнопка TG
+                tg.MainButton.text = `BUY ${plan} ($${price})`;
+                tg.MainButton.show();
+                log("Plan selected. MainButton shown.");
+
+            } catch (e) {
+                log("Error selectItem: " + e.message);
+                alert("Error: " + e.message);
+            }
+        }
+
+        // Обработка синей кнопки
+        tg.MainButton.onClick(() => {
+            if (selectedPlan) {
+                log("MainButton clicked. Sending data...");
+                tg.sendData(`buy_${selectedPlan}_${selectedPrice}`);
+            }
+        });
+
+    </script>
 </body>
 </html>
