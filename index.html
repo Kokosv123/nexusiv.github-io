@@ -164,15 +164,18 @@
         }
 
         // Функция клика по карте
-        window.selectItem = function(plan, price) {
+                window.selectItem = function(plan, price) {
             try {
                 log("Clicked: " + plan);
 
                 // Если уже выбран - отправляем
                 if (selectedPlan === plan) {
-                    log("Sending data: buy_" + plan + "_" + price);
+                    log("Sending data (Double Click): buy_" + plan + "_" + price);
+                    
                     tg.sendData(`buy_${plan}_${price}`);
-                    setTimeout(() => tg.close(), 100); // Принудительное закрытие
+                    
+                    // !!! ДОБАВЛЕНО: Принудительное закрытие через 50мс !!!
+                    setTimeout(function() { tg.close(); }, 50); 
                     return;
                 }
 
@@ -208,10 +211,14 @@
         tg.MainButton.onClick(() => {
             if (selectedPlan) {
                 log("MainButton clicked. Sending data...");
+                
                 tg.sendData(`buy_${selectedPlan}_${selectedPrice}`);
+                
+                // !!! ДОБАВЛЕНО: Принудительное закрытие !!!
+                setTimeout(function() { tg.close(); }, 50);
             }
         });
-
+        
     </script>
 </body>
 </html>
