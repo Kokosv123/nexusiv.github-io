@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nexus Store</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- ОБРАТИТЕ ВНИМАНИЕ: добавлено ?v=5 для обновления дизайна -->
+    <link rel="stylesheet" href="style.css?v=5">
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -24,14 +27,11 @@
 
         <!-- Настройки (Язык + Валюта) -->
         <div class="settings-bar">
-            <!-- Языки -->
             <div class="lang-switch">
                 <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
                 <button class="lang-btn" onclick="setLanguage('ru')">RU</button>
                 <button class="lang-btn" onclick="setLanguage('ua')">UA</button>
             </div>
-            
-            <!-- Валюты -->
             <div class="currency-scroll">
                 <button class="curr-btn active" onclick="setCurrency('USD')">$</button>
                 <button class="curr-btn" onclick="setCurrency('USDT')">₮</button>
@@ -100,6 +100,7 @@
         </div>
     </div>
 
+    <!-- ОБРАТИТЕ ВНИМАНИЕ: добавлено ?v=5 для обновления скрипта -->
     <script src="script.js?v=5"></script>
 </body>
 </html>
