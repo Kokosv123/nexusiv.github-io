@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,7 +10,6 @@
 </head>
 <body>
     
-    <!-- Фоновые элементы -->
     <div class="bg-glow top"></div>
     <div class="bg-glow bottom"></div>
 
@@ -20,69 +19,83 @@
                 <span class="logo-icon">💠</span>
                 <span class="logo-text">NEXUS STORE</span>
             </div>
-            <p class="subtitle">Digital Licenses & Keys</p>
+            <p class="subtitle" data-key="subtitle">Digital Licenses & Keys</p>
         </header>
 
-        <!-- Переключатель валют -->
-        <div class="currency-wrapper">
+        <!-- Настройки (Язык + Валюта) -->
+        <div class="settings-bar">
+            <!-- Языки -->
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" onclick="setLanguage('ru')">RU</button>
+                <button class="lang-btn" onclick="setLanguage('ua')">UA</button>
+            </div>
+            
+            <!-- Валюты -->
             <div class="currency-scroll">
-                <button class="curr-btn active" onclick="setCurrency('USD')">$ USD</button>
-                <button class="curr-btn" onclick="setCurrency('USDT')">₮ USDT</button>
-                <button class="curr-btn" onclick="setCurrency('EUR')">€ EUR</button>
-                <button class="curr-btn" onclick="setCurrency('UAH')">₴ UAH</button>
-                <button class="curr-btn" onclick="setCurrency('RUB')">₽ RUB</button>
+                <button class="curr-btn active" onclick="setCurrency('USD')">$</button>
+                <button class="curr-btn" onclick="setCurrency('USDT')">₮</button>
+                <button class="curr-btn" onclick="setCurrency('EUR')">€</button>
+                <button class="curr-btn" onclick="setCurrency('UAH')">₴</button>
+                <button class="curr-btn" onclick="setCurrency('RUB')">₽</button>
             </div>
         </div>
 
         <div class="cards-container">
-            <!-- BASE PLAN -->
-            <div class="card base" onclick="selectCard(this, 'BASE', 3.00)">
+            <!-- BASE -->
+            <div class="card base" onclick="handleCardClick('BASE', 3.00)">
                 <div class="card-header">
                     <h3>BASE</h3>
-                    <span class="duration">1 Месяц</span>
+                    <span class="duration" data-key="month1">1 Month</span>
                 </div>
                 <div class="price-box">
                     <span class="currency-symbol">$</span>
                     <span class="price-val" data-base="3">3.00</span>
                 </div>
                 <ul class="features">
-                    <li>✅ Доступ к софту</li>
+                    <li data-key="feat_access">✅ Access to soft</li>
+                    <li data-key="feat_support">✅ Basic support</li>
+                    <li data-key="feat_no_cfg">❌ Private Configs</li>
                 </ul>
-                <button class="buy-btn">ВЫБРАТЬ</button>
+                <button class="buy-btn" data-key="btn_select">SELECT</button>
             </div>
 
-            <!-- DELUXE PLAN (Popular) -->
-            <div class="card deluxe popular" onclick="selectCard(this, 'DELUXE', 5.00)">
-                <div class="badge">POPULAR</div>
+            <!-- DELUXE -->
+            <div class="card deluxe popular" onclick="handleCardClick('DELUXE', 5.00)">
+                <div class="badge" data-key="pop_badge">POPULAR</div>
                 <div class="card-header">
                     <h3>DELUXE</h3>
-                    <span class="duration">3 Месяца</span>
+                    <span class="duration" data-key="month3">3 Months</span>
                 </div>
                 <div class="price-box">
                     <span class="currency-symbol">$</span>
                     <span class="price-val" data-base="5">5.00</span>
                 </div>
                 <ul class="features">
-                    <li>✅ Доступ к софту</li>
+                    <li data-key="feat_all_base">✅ All Base features</li>
+                    <li data-key="feat_prio">✅ Queue Priority</li>
+                    <li data-key="feat_beta">✅ Beta Access</li>
                 </ul>
-                <button class="buy-btn">ВЫБРАТЬ</button>
+                <button class="buy-btn" data-key="btn_select">SELECT</button>
             </div>
 
-            <!-- ULTRA PLAN -->
-            <div class="card ultra" onclick="selectCard(this, 'ULTRA', 15.00)">
-                <div class="badge">BEST VALUE</div>
+            <!-- ULTRA -->
+            <div class="card ultra" onclick="handleCardClick('ULTRA', 15.00)">
+                <div class="badge" data-key="best_badge">BEST VALUE</div>
                 <div class="card-header">
                     <h3>ULTRA</h3>
-                    <span class="duration">1 Год / Навсегда</span>
+                    <span class="duration" data-key="year1">1 Year / Forever</span>
                 </div>
                 <div class="price-box">
                     <span class="currency-symbol">$</span>
                     <span class="price-val" data-base="15">15.00</span>
                 </div>
                 <ul class="features">
-                    <li>✅ Доступ к софту</li>
+                    <li data-key="feat_full">👑 Full Access</li>
+                    <li data-key="feat_manager">👑 Personal Manager</li>
+                    <li data-key="feat_dlc">👑 DLC Early Access</li>
                 </ul>
-                <button class="buy-btn">ВЫБРАТЬ</button>
+                <button class="buy-btn" data-key="btn_select">SELECT</button>
             </div>
         </div>
     </div>
