@@ -1,7 +1,12 @@
-const tg = window.Telegram.WebApp;
+// 1. Глобальный перехватчик ошибок (Покажет, если что-то сломалось сразу)
+window.onerror = function(message, source, lineno, colno, error) {
+    alert("CRITICAL ERROR:\n" + message + "\nLine: " + lineno);
+};
 
-// Сообщаем телеграму, что приложение готово
-tg.ready();
+// Проверка: загрузился ли файл вообще
+// alert("Script v5 Loaded!"); // Раскомментируйте, если хотите проверить, обновился ли файл
+
+const tg = window.Telegram.WebApp;
 tg.expand();
 
 // Переводы
@@ -20,35 +25,26 @@ let selectedPlan = null;
 let selectedPrice = 0;
 
 // Инициализация
-function init() {
-    try {
-        let userLang = tg.initDataUnsafe?.user?.language_code || 'en';
-        if (userLang === 'uk' || userLang === 'ua') userLang = 'ua';
-        if (userLang !== 'ru' && userLang !== 'ua') userLang = 'en';
-        setLanguage(userLang);
-        setCurrency('USD');
-    } catch (e) {
-        alert("Ошибка инициализации: " + e.message);
-    }
+try {
+    let userLang = tg.initDataUnsafe?.user?.language_code || 'en';
+    if (userLang === 'uk' || userLang === 'ua') userLang = 'ua';
+    if (userLang !== 'ru' && userLang !== 'ua') userLang = 'en';
+    
+    // Устанавливаем язык и валюту по умолчанию
+    setLanguage(userLang);
+    setCurrency('USD');
+} catch (e) {
+    alert("Init Error: " + e.message);
 }
 
+// Функции смены языка/валюты
 function setLanguage(lang) {
     currentLang = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.remove('active');
         if(btn.textContent.toLowerCase() === lang) btn.classList.add('active');
     });
-    
-    // Обновляем тексты кнопок на карточках
-    document.querySelectorAll('.card').forEach(card => {
-        const btn = card.querySelector('.buy-btn');
-        // Если карта выбрана - текст "КУПИТЬ", иначе "ВЫБРАТЬ"
-        if (card.classList.contains('selected')) {
-            btn.textContent = translations[lang]['btn_buy'];
-        } else {
-            btn.textContent = translations[lang]['btn_select'];
-        }
-    });
+    updateButtons();
 }
 
 function setCurrency(curr) {
@@ -69,63 +65,66 @@ function setCurrency(curr) {
     });
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ КЛИКА
-function handleCardClick(plan, basePrice) {
+function updateButtons() {
+    document.querySelectorAll('.card').forEach(card => {
+        const btn = card.querySelector('.buy-btn');
+        if (card.classList.contains('selected')) {
+            btn.textContent = translations[currentLang]['btn_buy'];
+        } else {
+            btn.textContent = translations[currentLang]['btn_select'];
+        }
+    });
+}
+
+// === ГЛАВНАЯ ФУНКЦИЯ КЛИКА ===
+// Сделана глобальной (window.), чтобы HTML точно её увидел
+window.handleCardClick = function(plan, basePrice) {
     try {
-        // 1. Если этот план УЖЕ выбран -> Пытаемся купить
+        // Логика двойного клика
         if (selectedPlan === plan) {
-            const data = `buy_${plan}_${basePrice}`;
+            // ВТОРОЙ КЛИК - ПОКУПКА
             
-            // Проверка: мы вообще в Телеграме?
             if (!tg.initData) {
-                alert("Ошибка: Сайт открыт не в Telegram! Откройте через бота.");
+                alert("Ошибка: Приложение открыто не в Telegram!");
                 return;
             }
 
-            // Отправляем данные
-            tg.sendData(data); 
+            const data = `buy_${plan}_${basePrice}`;
             
-            // На всякий случай закрываем принудительно, если sendData сработал, но окно висит
-            setTimeout(() => {
-                tg.close();
-            }, 100); 
+            // alert("Отправка данных: " + data); // Отладка перед отправкой
+            
+            tg.sendData(data);
             return;
         }
 
-        // 2. Если план НЕ выбран -> Выбираем его
+        // ПЕРВЫЙ КЛИК - ВЫБОР
         selectedPlan = plan;
         selectedPrice = basePrice;
 
         // Сброс стилей
-        document.querySelectorAll('.card').forEach(c => {
-            c.classList.remove('selected');
-            c.querySelector('.buy-btn').textContent = translations[currentLang]['btn_select'];
-        });
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
 
-        // Подсветка текущей
+        // Подсветка новой карты
         const card = document.querySelector(`.card.${plan.toLowerCase()}`);
-        if (card) {
-            card.classList.add('selected');
-            card.querySelector('.buy-btn').textContent = translations[currentLang]['btn_buy'];
-        }
+        if(card) card.classList.add('selected');
 
-        // Показываем нижнюю синюю кнопку Telegram
+        // Обновление текстов кнопок
+        updateButtons();
+
+        // Показ MainButton (Синяя кнопка внизу)
         tg.MainButton.text = `${translations[currentLang]['btn_buy']} ${plan}`;
         tg.MainButton.show();
 
     } catch (e) {
-        alert("Ошибка в handleCardClick: " + e.message);
+        alert("Click Error: " + e.message);
     }
-}
+};
 
-// Обработка нижней синей кнопки
+// Обработка синей кнопки Telegram
 tg.MainButton.onClick(() => {
     if (selectedPlan) {
-        const data = `buy_${selectedPlan}_${selectedPrice}`;
-        tg.sendData(data);
+        tg.sendData(`buy_${selectedPlan}_${selectedPrice}`);
     } else {
-        alert("Сначала выберите тариф!");
+        alert("Select a plan first!");
     }
 });
-
-init();
