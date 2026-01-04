@@ -1,104 +1,130 @@
-:root {
-    --bg-color: #050505;
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --text-main: #ffffff;
-    --text-muted: #888888;
-    --accent-blue: #00d2ff;
+// 1. Глобальный перехватчик ошибок (Покажет, если что-то сломалось сразу)
+window.onerror = function(message, source, lineno, colno, error) {
+    alert("CRITICAL ERROR:\n" + message + "\nLine: " + lineno);
+};
+
+// Проверка: загрузился ли файл вообще
+// alert("Script v5 Loaded!"); // Раскомментируйте, если хотите проверить, обновился ли файл
+
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+// Переводы
+const translations = {
+    en: { btn_select: "SELECT", btn_buy: "BUY NOW" },
+    ru: { btn_select: "ВЫБРАТЬ", btn_buy: "КУПИТЬ" },
+    ua: { btn_select: "ОБРАТИ", btn_buy: "КУПИТИ" }
+};
+
+const rates = { USD: 1, USDT: 1, EUR: 0.92, RUB: 92.5, UAH: 41.5 };
+const symbols = { USD: '$', USDT: '₮', EUR: '€', RUB: '₽', UAH: '₴' };
+
+let currentLang = 'en';
+let currentCurrency = 'USD';
+let selectedPlan = null;
+let selectedPrice = 0;
+
+// Инициализация
+try {
+    let userLang = tg.initDataUnsafe?.user?.language_code || 'en';
+    if (userLang === 'uk' || userLang === 'ua') userLang = 'ua';
+    if (userLang !== 'ru' && userLang !== 'ua') userLang = 'en';
+    
+    // Устанавливаем язык и валюту по умолчанию
+    setLanguage(userLang);
+    setCurrency('USD');
+} catch (e) {
+    alert("Init Error: " + e.message);
 }
 
-body {
-    margin: 0; padding: 0;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    font-family: 'Inter', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+// Функции смены языка/валюты
+function setLanguage(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.textContent.toLowerCase() === lang) btn.classList.add('active');
+    });
+    updateButtons();
 }
 
-.bg-glow { position: fixed; width: 300px; height: 300px; border-radius: 50%; filter: blur(120px); opacity: 0.25; z-index: -1; }
-.top { top: -100px; left: -50%; background: #bc13fe; }
-.bottom { bottom: -100px; right: -50%; background: #00d2ff; }
+function setCurrency(curr) {
+    currentCurrency = curr;
+    document.querySelectorAll('.curr-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.textContent.includes(symbols[curr])) btn.classList.add('active');
+    });
 
-.container { max-width: 450px; margin: 0 auto; padding: 20px 20px 80px 20px; }
+    document.querySelectorAll('.price-val').forEach(el => {
+        const base = parseFloat(el.getAttribute('data-base'));
+        const val = (base * rates[curr]).toFixed(curr === 'RUB' || curr === 'UAH' ? 0 : 2);
+        el.textContent = val;
+    });
 
-header { text-align: center; margin-bottom: 20px; }
-.logo { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: 2px; }
-.subtitle { margin: 5px 0 0; color: var(--text-muted); font-size: 13px; }
-
-/* Settings Bar (Lang + Currency) */
-.settings-bar {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 25px;
-    gap: 10px;
+    document.querySelectorAll('.currency-symbol').forEach(el => {
+        el.textContent = symbols[curr];
+    });
 }
 
-.lang-switch, .currency-scroll {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 4px;
-    display: flex;
-    gap: 4px;
+function updateButtons() {
+    document.querySelectorAll('.card').forEach(card => {
+        const btn = card.querySelector('.buy-btn');
+        if (card.classList.contains('selected')) {
+            btn.textContent = translations[currentLang]['btn_buy'];
+        } else {
+            btn.textContent = translations[currentLang]['btn_select'];
+        }
+    });
 }
 
-.lang-btn, .curr-btn {
-    background: transparent; border: none;
-    color: var(--text-muted);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 600; font-size: 12px;
-    cursor: pointer; transition: 0.2s;
-}
+// === ГЛАВНАЯ ФУНКЦИЯ КЛИКА ===
+// Сделана глобальной (window.), чтобы HTML точно её увидел
+window.handleCardClick = function(plan, basePrice) {
+    try {
+        // Логика двойного клика
+        if (selectedPlan === plan) {
+            // ВТОРОЙ КЛИК - ПОКУПКА
+            
+            if (!tg.initData) {
+                alert("Ошибка: Приложение открыто не в Telegram!");
+                return;
+            }
 
-.lang-btn.active, .curr-btn.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-}
+            const data = `buy_${plan}_${basePrice}`;
+            
+            // alert("Отправка данных: " + data); // Отладка перед отправкой
+            
+            tg.sendData(data);
+            return;
+        }
 
-/* Cards */
-.cards-container { display: flex; flex-direction: column; gap: 15px; }
+        // ПЕРВЫЙ КЛИК - ВЫБОР
+        selectedPlan = plan;
+        selectedPrice = basePrice;
 
-.card {
-    background: var(--card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-    position: relative;
-    transition: 0.2s;
-    cursor: pointer;
-}
-.card:active { transform: scale(0.98); }
+        // Сброс стилей
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
 
-.base { border-top: 2px solid #00d2ff; }
-.deluxe { border-top: 2px solid #bc13fe; }
-.ultra { border-top: 2px solid #ffaa00; }
+        // Подсветка новой карты
+        const card = document.querySelector(`.card.${plan.toLowerCase()}`);
+        if(card) card.classList.add('selected');
 
-.card.selected { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+        // Обновление текстов кнопок
+        updateButtons();
 
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.card-header h3 { margin: 0; font-family: 'Rajdhani', sans-serif; font-size: 24px; }
-.duration { font-size: 11px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; }
+        // Показ MainButton (Синяя кнопка внизу)
+        tg.MainButton.text = `${translations[currentLang]['btn_buy']} ${plan}`;
+        tg.MainButton.show();
 
-.price-box { font-size: 28px; font-weight: 700; margin-bottom: 15px; font-family: 'Rajdhani', sans-serif; }
-.currency-symbol { font-size: 18px; color: var(--text-muted); vertical-align: top; }
+    } catch (e) {
+        alert("Click Error: " + e.message);
+    }
+};
 
-.features { list-style: none; padding: 0; margin: 0 0 15px 0; color: #ccc; font-size: 13px; }
-.features li { margin-bottom: 6px; }
-
-.buy-btn {
-    width: 100%; padding: 12px;
-    border: none; border-radius: 8px;
-    background: rgba(255,255,255,0.1);
-    color: white; font-weight: 700;
-    transition: 0.2s;
-}
-
-.card.selected .buy-btn { background: white; color: black; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
-
-.badge {
-    position: absolute; top: 0; right: 0;
-    background: #bc13fe; color: white;
-    font-size: 9px; font-weight: bold;
-    padding: 4px 8px; border-bottom-left-radius: 8px;
-}
-.ultra .badge { background: #ffaa00; color: black; }
+// Обработка синей кнопки Telegram
+tg.MainButton.onClick(() => {
+    if (selectedPlan) {
+        tg.sendData(`buy_${selectedPlan}_${selectedPrice}`);
+    } else {
+        alert("Select a plan first!");
+    }
+});
